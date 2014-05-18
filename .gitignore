@@ -1,0 +1,3 @@
+src/nzedb-backend
+src/o/*
+src/valgrind.log
