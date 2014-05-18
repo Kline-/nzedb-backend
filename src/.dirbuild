@@ -1,0 +1,2 @@
+## Create possibly empty folders due to Git
+mkdir -p o
