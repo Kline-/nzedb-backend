@@ -33,6 +33,7 @@
 /* Core */
 /**
  * @brief Create a new database connection.
+ * @param[in] type The database connector to use, from #DBCONN_TYPE.
  * @param[in] host The hostname or IP address of the server to connect to.
  * @param[in] socket The unix socket file or port number of the server to connect to.
  * @param[in] user Username to use when connecting to the database server.
@@ -41,8 +42,16 @@
  * @retval false Returned if there was an error connecting to the database.
  * @retval true Returned if a databaes connection was successfully established.
  */
-const bool DBConn::New( const string& host, const string& socket, const string& user, const string& pass, const string& database )
+const bool DBConn::New( const uint_t& type, const string& host, const string& socket, const string& user, const string& pass, const string& database )
 {
+    UFLAGS_DE( flags );
+
+    if ( type < uintmin_t || type >= MAX_DBCONN_TYPE )
+    {
+        LOGFMT( flags, "DBConn::New()-> called with invalid type: %lu", type );
+        return false;
+    }
+
     return true;
 }
 
@@ -51,3 +60,41 @@ const bool DBConn::New( const string& host, const string& socket, const string& 
 /* Manipulate */
 
 /* Internal */
+/**
+ * @brief Constructor for the DBConn::MySQL clasas.
+ */
+DBConn::MySQL::MySQL()
+{
+    m_reconnect = true;
+
+    return;
+}
+
+/**
+ * @brief Destructor for the DBConn::MySQL class.
+ */
+DBConn::MySQL::~MySQL()
+{
+    return;
+}
+
+/**
+ * @brief Constructor for the DBConn class.
+ */
+DBConn::DBConn()
+{
+    m_mysql = NULL;
+
+    return;
+}
+
+/**
+ * @brief Destructor for the DBConn class.
+ */
+DBConn::~DBConn()
+{
+    if ( m_mysql )
+        delete m_mysql;
+
+    return;
+}

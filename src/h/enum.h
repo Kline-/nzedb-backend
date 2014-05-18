@@ -31,6 +31,17 @@
 #ifndef DEC_ENUM_H
 #define DEC_ENUM_H
 
+/** @name DBConn */ /**@{*/
+/**
+ * @enum DBCONN_TYPE
+ */
+enum DBCONN_TYPE
+{
+    DBCONN_TYPE_MYSQL = 0, /**< Use the MySQL connector. */
+    MAX_DBCONN_TYPE   = 1  /**< Safety limit for looping. */
+};
+/**@}*/
+
 /** @name Utils */ /**@{*/
 /**
  * @enum UTILS_OPTS

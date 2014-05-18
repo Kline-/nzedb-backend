@@ -36,10 +36,37 @@ using namespace std;
  */
 class DBConn
 {
+    /**
+     * @brief MySQL backend.
+     */
+    class MySQL
+    {
+        public:
+            /** @name Core */ /**@{*/
+            /**@}*/
+
+            /** @name Query */ /**@{*/
+            /**@}*/
+
+            /** @name Manipulate */ /**@{*/
+            /**@}*/
+
+            /** @name Internal */ /**@{*/
+            MySQL();
+            ~MySQL();
+            /**@}*/
+
+        private:
+            MYSQL m_sql; /**< Connection to the MySQL database. */
+            MYSQL_RES* m_res; /**< The result set from a query. */
+            MYSQL_ROW m_row; /**< One row of data from a query. */
+            my_bool m_reconnect; /**< Determine if the handler will attempt to reconnect when disconnected. */
+    };
+
     public:
         /** @name Core */ /**@{*/
         const void Delete();
-        const bool New( const string& host, const string& socket, const string& user, const string& pass, const string& database );
+        const bool New( const uint_t& type, const string& host, const string& socket, const string& user, const string& pass, const string& database );
         /**@}*/
 
         /** @name Query */ /**@{*/
@@ -54,6 +81,7 @@ class DBConn
         /**@}*/
 
     private:
+        DBConn::MySQL* m_mysql; /**< MySQL connector. */
 };
 
 #endif

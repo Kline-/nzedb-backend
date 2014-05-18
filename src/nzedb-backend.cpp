@@ -56,11 +56,20 @@ const vector<ThreadData> thread_data
 
 int main( const int argc, char* argv[] )
 {
+    UFLAGS_DE( flags );
+
     time_current = chrono::high_resolution_clock::now();
 
-    // Fork to the background immediately to avoid shell output
-    daemon( 1, 0 );
+    // This needs to be called prior to any threads firing off that may hit the DB
+    if ( mysql_library_init( 0, NULL, NULL ) )
+    {
+        LOGSTR( flags, "Failed to initialize MySQL connector." );
+        ::exit( EXIT_FAILURE );
+    }
 
+    // Fork to the background immediately to avoid shell output
+    // daemon( 1, 0 );
+/*
     ThreadData* data;
     ThreadData td;
     vector<ThreadData>::const_iterator vi;
@@ -79,6 +88,9 @@ int main( const int argc, char* argv[] )
     }
 
     pause();
+*/
+    // Cleanup the MySQL connector
+    mysql_library_end();
 
     return 0;
 }
