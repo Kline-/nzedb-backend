@@ -32,9 +32,42 @@
 #define DEC_CONFIG_H
 
 /***************************************************************************
+ *                              MEMORY OPTIONS                             *
+ ***************************************************************************/
+/** @name Memory Options */ /**@{*/
+/**
+ * @def CFG_MEM_MAX_BITSET
+ * @brief Maximum size of all bitset elements.
+ * @par Default: 128
+ */
+#define CFG_MEM_MAX_BITSET 128
+/**@}*/
+
+/***************************************************************************
  *                              STRING OPTIONS                             *
  ***************************************************************************/
 /** @name String Options */ /**@{*/
+/**
+ * @def CFG_STR_UTILS_ERROR
+ * @brief String to prepend to logs flagged UTILS_TYPE_ERROR.
+ * @par Default: "[ERROR ] "
+ */
+#define CFG_STR_UTILS_ERROR "[ERROR] "
+
+/**
+ * @def CFG_STR_UTILS_INFO
+ * @brief String to prepend to logs flagged UTILS_TYPE_INFO.
+ * @par Default: "[INFO  ] "
+ */
+#define CFG_STR_UTILS_INFO "[INFO  ] "
+
+/**
+ * @def CFG_STR_UTILS_SOCKET
+ * @brief String to prepend to logs flagged UTILS_TYPE_SOCKET.
+ * @par Default: "[SOCKET] "
+ */
+#define CFG_STR_UTILS_SOCKET "[SOCKET] "
+
 /**
  * @def CFG_STR_VERSION
  * @brief The current nzedb-backend version.

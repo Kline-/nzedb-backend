@@ -55,7 +55,7 @@ cbuild:
 	$(MAKE) $(PROG)
 
 clean:
-	$(RMS) $(O_FILES) $(DEPS) $(PROG)
+	$(RM) $(O_FILES) $(DEPS) $(PROG)
 
 depend:
 	$(RM) $(DEPS)

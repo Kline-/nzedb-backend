@@ -36,6 +36,24 @@ using namespace std;
  */
 class DBConn
 {
+    public:
+        /** @name Core */ /**@{*/
+        const void Delete();
+        const bool New( const string& host, const string& socket, const string& user, const string& pass, const string& database );
+        /**@}*/
+
+        /** @name Query */ /**@{*/
+        /**@}*/
+
+        /** @name Manipulate */ /**@{*/
+        /**@}*/
+
+        /** @name Internal */ /**@{*/
+        DBConn();
+        ~DBConn();
+        /**@}*/
+
+    private:
 };
 
 #endif

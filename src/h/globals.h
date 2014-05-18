@@ -21,28 +21,14 @@
  * 3. This notice may not be removed or altered from any source distribution.
  **/
 /**
- * @file sysincludes.h
- * @brief All system standard includes that are used within nzedb-backend.
+ * @file globals.h
+ * @brief Externs to reference global scope variables.
  *
- * This file is a "header of headers". All system include files are
- * maintained within this header for easier management and readability.
- *
- * Note that the order of includes within this file is not significant.
+ * This file contains extern references to all global scope objects.
  */
-#ifndef DEC_SYSINCLUDES_H
-#define DEC_SYSINCLUDES_H
+#ifndef DEC_GLOBALS_H
+#define DEC_GLOBALS_H
 
-#include <bitset>
-#include <chrono>
-#include <cstdarg>
-#include <iostream>
-#include <iterator>
-#include <sstream>
-#include <vector>
-
-#include <mysql/mysql.h>
-#include <pthread.h>
-#include <stdlib.h>
-#include <unistd.h>
+extern chrono::high_resolution_clock::time_point time_current;
 
 #endif

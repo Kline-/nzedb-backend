@@ -27,12 +27,19 @@
  * This file is a "header of headers" in that it only references other
  * headers within nzedb-backend that should be included to each .cpp file.
  * This header file should be the first file included within every .cpp file.
+ *
+ * Note that the order of includes within this file is in order of dependence.
  */
 #ifndef DEC_INCLUDES_H
 #define DEC_INCLUDES_H
 
 #include "sysincludes.h"
+#include "limits.h"
+#include "macros.h"
+#include "enum.h"
 #include "config.h"
 #include "class.h"
+#include "namespace.h"
+#include "globals.h"
 
 #endif
