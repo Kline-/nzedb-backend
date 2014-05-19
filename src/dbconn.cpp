@@ -51,7 +51,7 @@ const bool DBConn::MySQL::New( DBConn* dbconn )
     UFLAGS_DE( flags );
     pthread_attr_t res_attr;
     pthread_t res_thread;
-    uint_t sleep = 0;
+//    uint_t sleep = 0;
 
     if ( dbconn == NULL )
     {
@@ -84,7 +84,7 @@ const bool DBConn::MySQL::New( DBConn* dbconn )
         LOGERRNO( flags, "DBConn::MySQL::New()->pthread_attr_destroy()->" );
         return false;
     }
-
+/*
     for ( ;; )
     {
         if ( ++sleep >= CFG_THR_MAX_TIMEOUT )
@@ -93,22 +93,27 @@ const bool DBConn::MySQL::New( DBConn* dbconn )
             return false;
         }
 
-        if ( m_status == DBCONN_STATUS_NONE )
-            ::usleep( 1 );
-        else if ( m_status == DBCONN_STATUS_ERROR )
+        if ( m_dbconn->m_status == DBCONN_STATUS_ERROR )
         {
             LOGSTR( flags, "DBConn::MySQL::New()-> error while attempting to connect" );
             return false;
         }
-        else if ( m_status == DBCONN_STATUS_VALID )
+        else if ( m_dbconn->m_status == DBCONN_STATUS_VALID )
             return true;
+        else if ( m_dbconn->m_status == DBCONN_STATUS_CLOSE )
+        {
+            LOGSTR( flags, "DBConn::MySQL::New()-> connector closing down" );
+            return false;
+        }
+        else if ( m_dbconn->m_status == DBCONN_STATUS_NONE )
+            ::usleep( 1 );
         else
         {
             LOGSTR( flags, "DBConn::MySQL::New()-> invalid status while attempting to connect" );
             return false;
         }
     }
-
+*/
     return true;
 }
 
@@ -221,35 +226,54 @@ void* DBConn::MySQL::Thread( void* data )
 
     if ( mysql_init( &dbconn_mysql->m_sql ) == NULL )
     {
-        dbconn_mysql->m_status = DBCONN_STATUS_ERROR;
+        dbconn_mysql->m_dbconn->m_status = DBCONN_STATUS_ERROR;
         LOGFMT( flags, "DBConn::MySQL::Thread()->mysql_init()-> %s", mysql_error( &dbconn_mysql->m_sql ) );
+        mysql_thread_end();
+
         ::pthread_exit( reinterpret_cast<void*>( EXIT_FAILURE ) );
     }
 
     if ( mysql_options( &dbconn_mysql->m_sql, MYSQL_OPT_RECONNECT, &dbconn_mysql->m_reconnect ) != 0 )
     {
-        dbconn_mysql->m_status = DBCONN_STATUS_ERROR;
+        dbconn_mysql->m_dbconn->m_status = DBCONN_STATUS_ERROR;
         LOGFMT( flags, "DBConn::MySQL::Thread()->mysql_options()-> %s", mysql_error( &dbconn_mysql->m_sql ) );
+        mysql_thread_end();
+
         ::pthread_exit( reinterpret_cast<void*>( EXIT_FAILURE ) );
     }
 
     // Safer than ::stoi(), will output 0 for anything invalid
     stringstream( dbconn_mysql->m_dbconn->m_socket ) >> port;
 
-    // Connect via unix socket
-    if ( port == 0 && ( mysql_real_connect( &dbconn_mysql->m_sql, CSTR( dbconn_mysql->m_dbconn->m_host ), CSTR( dbconn_mysql->m_dbconn->m_user ), CSTR( dbconn_mysql->m_dbconn->m_pass ), CSTR( dbconn_mysql->m_dbconn->m_database ), 0, CSTR( dbconn_mysql->m_dbconn->m_socket ), 0 ) == NULL ) )
-        valid = false;
-    else if ( mysql_real_connect( &dbconn_mysql->m_sql, CSTR( dbconn_mysql->m_dbconn->m_host ), CSTR( dbconn_mysql->m_dbconn->m_user ), CSTR( dbconn_mysql->m_dbconn->m_pass ), CSTR( dbconn_mysql->m_dbconn->m_database ), port, NULL, 0 ) == NULL )
-        valid = false;
+    // If port is 0, connect via unix socket
+    if ( port == 0 )
+    {
+        if ( mysql_real_connect( &dbconn_mysql->m_sql, CSTR( dbconn_mysql->m_dbconn->m_host ), CSTR( dbconn_mysql->m_dbconn->m_user ), CSTR( dbconn_mysql->m_dbconn->m_pass ), CSTR( dbconn_mysql->m_dbconn->m_database ), 0, CSTR( dbconn_mysql->m_dbconn->m_socket ), 0 ) == NULL )
+            valid = false;
+    }
+    else
+    {
+        if ( mysql_real_connect( &dbconn_mysql->m_sql, CSTR( dbconn_mysql->m_dbconn->m_host ), CSTR( dbconn_mysql->m_dbconn->m_user ), CSTR( dbconn_mysql->m_dbconn->m_pass ), CSTR( dbconn_mysql->m_dbconn->m_database ), port, NULL, 0 ) == NULL )
+            valid = false;
+    }
 
     if ( !valid )
     {
-        dbconn_mysql->m_status = DBCONN_STATUS_ERROR;
+        dbconn_mysql->m_dbconn->m_status = DBCONN_STATUS_ERROR;
         LOGFMT( flags, "DBConn::MySQL::Thread()->mysql_real_connect()-> %s", mysql_error( &dbconn_mysql->m_sql ));
         mysql_close( &dbconn_mysql->m_sql );
+        mysql_thread_end();
 
         ::pthread_exit( reinterpret_cast<void*>( EXIT_FAILURE ) );
     }
+
+    while ( dbconn_mysql->m_dbconn->m_status != DBCONN_STATUS_CLOSE )
+    {
+        ::usleep( CFG_THR_SLEEP );
+    }
+
+    mysql_close( &dbconn_mysql->m_sql );
+    mysql_thread_end();
 
     ::pthread_exit( reinterpret_cast<void*>( EXIT_SUCCESS ) );
 }
@@ -262,7 +286,6 @@ DBConn::MySQL::MySQL()
 {
     m_dbconn = NULL;
     m_reconnect = true;
-    m_status = uintmin_t;
 
     return;
 }
@@ -286,6 +309,7 @@ DBConn::DBConn()
     m_mysql = NULL;
     m_pass.clear();
     m_socket.clear();
+    m_status = uintmin_t;
     m_type = uintmin_t;
     m_user.clear();
 

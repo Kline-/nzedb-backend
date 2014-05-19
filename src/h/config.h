@@ -81,6 +81,13 @@
  ***************************************************************************/
 /** @name Thread Options */ /**@{*/
 /**
+ * @def CFG_THR_SLEEP
+ * @brief The amount of time (in microseconds) to sleep a thread while waiting for work.
+ * @par Default: 5
+ */
+#define CFG_THR_SLEEP 5
+
+/**
  * @def CFG_THR_MAX_TIMEOUT
  * @brief Maximum time (in microseconds) to block while initializing a thread.
  * @par Default: 3000000

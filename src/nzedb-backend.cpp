@@ -22,6 +22,8 @@
  **/
 #include "h/includes.h"
 
+#include "h/dbconn.h"
+
 using namespace std;
 
 struct ThreadData
@@ -61,12 +63,23 @@ int main( const int argc, char* argv[] )
     time_current = chrono::high_resolution_clock::now();
 
     // This needs to be called prior to any threads firing off that may hit the DB
+
     if ( mysql_library_init( 0, NULL, NULL ) )
     {
         LOGSTR( flags, "Failed to initialize MySQL connector." );
         ::exit( EXIT_FAILURE );
     }
 
+DBConn* dbconn = NULL;
+    for ( auto i = 0; i < 10; i++ )
+    {
+        dbconn = new DBConn();
+        if ( dbconn->New( DBCONN_TYPE_MYSQL, "localhost", "/var/run/mysqld/mysqld.sock", "nzedb", "nzedb", "nzedb" ) )
+        {
+            LOGSTR( flags, "Success!" );
+            dbconn->Delete();
+        }
+    }
     // Fork to the background immediately to avoid shell output
     // daemon( 1, 0 );
 /*
