@@ -53,19 +53,45 @@ const void DBConn::MySQL::Delete()
 const bool DBConn::MySQL::New( const string& host, const string& socket, const string& user, const string& pass, const string& database )
 {
     UFLAGS_DE( flags );
+    bool valid = false;
+    uint_t sleep = 0;
 
     if ( host.empty() )
-        LOGSTR( flags, "DBConn::New()-> called with empty host" );
+        LOGSTR( flags, "DBConn::MySQL::New()-> called with empty host" );
     if ( socket.empty() )
-        LOGSTR( flags, "DBConn::New()-> called with empty socket" );
+        LOGSTR( flags, "DBConn::MySQL::New()-> called with empty socket" );
     if ( user.empty() )
-        LOGSTR( flags, "DBConn::New()-> called with empty user" );
+        LOGSTR( flags, "DBConn::MySQL::New()-> called with empty user" );
     if ( pass.empty() )
-        LOGSTR( flags, "DBConn::New()-> called with empty pass" );
+        LOGSTR( flags, "DBConn::MySQL::New()-> called with empty pass" );
     if ( database.empty() )
-        LOGSTR( flags, "DBConn::New()-> called with empty database" );
+        LOGSTR( flags, "DBConn::MySQL::New()-> called with empty database" );
 
-    return true;
+    while ( !valid )
+    {
+        if ( ++sleep >= CFG_THR_MAX_TIMEOUT )
+        {
+            LOGSTR( flags, "DBConn::MySQL::New()-> timeout while attempting to connect" );
+            break;
+        }
+
+        if ( m_status == DBCONN_STATUS_NONE )
+            continue;
+        else if ( m_status == DBCONN_STATUS_ERROR )
+        {
+            LOGSTR( flags, "DBConn::MySQL::New()-> error while attempting to connect" );
+            break;
+        }
+        else if ( m_status == DBCONN_STATUS_VALID )
+            valid = true;
+        else
+        {
+            LOGSTR( flags, "DBConn::MySQL::New()-> invalid status while attempting to connect" );
+            break;
+        }
+    }
+
+    return valid;
 }
 
 /**
@@ -98,6 +124,17 @@ const bool DBConn::New( const uint_t& type, const string& host, const string& so
     UFLAGS_DE( flags );
     bool valid = false;
 
+    if ( host.empty() )
+        LOGSTR( flags, "DBConn::New()-> called with empty host" );
+    if ( socket.empty() )
+        LOGSTR( flags, "DBConn::New()-> called with empty socket" );
+    if ( user.empty() )
+        LOGSTR( flags, "DBConn::New()-> called with empty user" );
+    if ( pass.empty() )
+        LOGSTR( flags, "DBConn::New()-> called with empty pass" );
+    if ( database.empty() )
+        LOGSTR( flags, "DBConn::New()-> called with empty database" );
+
     switch ( type )
     {
         case DBCONN_TYPE_MYSQL:
@@ -114,17 +151,6 @@ const bool DBConn::New( const uint_t& type, const string& host, const string& so
         break;
     }
 
-    if ( host.empty() )
-        LOGSTR( flags, "DBConn::New()-> called with empty host" );
-    if ( socket.empty() )
-        LOGSTR( flags, "DBConn::New()-> called with empty socket" );
-    if ( user.empty() )
-        LOGSTR( flags, "DBConn::New()-> called with empty user" );
-    if ( pass.empty() )
-        LOGSTR( flags, "DBConn::New()-> called with empty pass" );
-    if ( database.empty() )
-        LOGSTR( flags, "DBConn::New()-> called with empty database" );
-
     if ( valid )
         m_type = type;
 
@@ -134,6 +160,15 @@ const bool DBConn::New( const uint_t& type, const string& host, const string& so
 /* Query */
 
 /* Manipulate */
+/**
+ * @brief Launches the MySQL connector into its own thread to avoid blocking.
+ * @param[in] data A self-reference passed via this to use for callback.
+ * @retval void
+ */
+void* DBConn::MySQL::Thread( void* data )
+{
+    ::pthread_exit( reinterpret_cast<void*>( EXIT_SUCCESS ) );
+}
 
 /* Internal */
 /**
@@ -142,6 +177,7 @@ const bool DBConn::New( const uint_t& type, const string& host, const string& so
 DBConn::MySQL::MySQL()
 {
     m_reconnect = true;
+    m_status = uintmin_t;
 
     return;
 }

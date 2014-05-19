@@ -76,4 +76,16 @@
 #define CFG_STR_VERSION "nzedb-backend 0.0.0"
 /**@}*/
 
+/***************************************************************************
+ *                              THREAD OPTIONS                             *
+ ***************************************************************************/
+/** @name Thread Options */ /**@{*/
+/**
+ * @def CFG_THR_MAX_TIMEOUT
+ * @brief Maximum time (in microseconds) to block while initializing a thread.
+ * @par Default: 3000000
+ */
+#define CFG_THR_MAX_TIMEOUT 3000000
+/**@}*/
+
 #endif

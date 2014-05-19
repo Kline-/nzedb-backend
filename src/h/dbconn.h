@@ -51,6 +51,7 @@ class DBConn
             /**@}*/
 
             /** @name Manipulate */ /**@{*/
+            static void* Thread( void* data );
             /**@}*/
 
             /** @name Internal */ /**@{*/
@@ -60,6 +61,7 @@ class DBConn
 
         private:
             MYSQL m_sql; /**< Connection to the MySQL database. */
+            uint_t m_status; /**< Callback to check if the thread made a successful connection. */
             MYSQL_RES* m_res; /**< The result set from a query. */
             MYSQL_ROW m_row; /**< One row of data from a query. */
             my_bool m_reconnect; /**< Determine if the handler will attempt to reconnect when disconnected. */

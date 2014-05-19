@@ -33,6 +33,17 @@
 
 /** @name DBConn */ /**@{*/
 /**
+ * @enum DBCONN_STATUS
+ */
+enum DBCONN_STATUS
+{
+    DBCONN_STATUS_NONE  = 0, /**< A newly initialized connector. */
+    DBCONN_STATUS_ERROR = 1, /**< Connector failed to initialize or connect to the database. */
+    DBCONN_STATUS_VALID = 2, /**< Connector successfully connected to the database. */
+    MAX_DBCONN_STATUS   = 3  /**< Safety limit for looping. */
+};
+
+/**
  * @enum DBCONN_TYPE
  */
 enum DBCONN_TYPE
