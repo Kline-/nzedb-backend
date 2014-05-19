@@ -43,6 +43,8 @@ class DBConn
     {
         public:
             /** @name Core */ /**@{*/
+            const void Delete();
+            const bool New( const string& host, const string& socket, const string& user, const string& pass, const string& database );
             /**@}*/
 
             /** @name Query */ /**@{*/
@@ -81,7 +83,9 @@ class DBConn
         /**@}*/
 
     private:
+        bool m_busy; /**< Indicate if the connector is pending a query response. */
         DBConn::MySQL* m_mysql; /**< MySQL connector. */
+        uint_t m_type; /**< The type of connector to utilize from #DBCONN_TYPE. */
 };
 
 #endif
