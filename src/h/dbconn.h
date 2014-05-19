@@ -44,7 +44,7 @@ class DBConn
         public:
             /** @name Core */ /**@{*/
             const void Delete();
-            const bool New( const string& host, const string& socket, const string& user, const string& pass, const string& database );
+            const bool New( DBConn* dbconn );
             /**@}*/
 
             /** @name Query */ /**@{*/
@@ -60,6 +60,7 @@ class DBConn
             /**@}*/
 
         private:
+            DBConn* m_dbconn; /**< Parent DBConn for callback. */
             MYSQL m_sql; /**< Connection to the MySQL database. */
             uint_t m_status; /**< Callback to check if the thread made a successful connection. */
             MYSQL_RES* m_res; /**< The result set from a query. */
@@ -86,8 +87,13 @@ class DBConn
 
     private:
         bool m_busy; /**< Indicate if the connector is pending a query response. */
+        string m_database; /**< Database to access on the database server. */
+        string m_host; /**< Hostname of the database server. */
         DBConn::MySQL* m_mysql; /**< MySQL connector. */
+        string m_pass; /**< Password to login to the database server with. */
+        string m_socket; /**< Unix socket or port number of the database server. */
         uint_t m_type; /**< The type of connector to utilize from #DBCONN_TYPE. */
+        string m_user; /**< Username to login to the database server with. */
 };
 
 #endif

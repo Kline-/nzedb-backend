@@ -42,56 +42,74 @@ const void DBConn::MySQL::Delete()
 
 /**
  * @brief Create a new MySQL connector.
- * @param[in] host The hostname or IP address of the server to connect to.
- * @param[in] socket The unix socket file or port number of the server to connect to.
- * @param[in] user Username to use when connecting to the database server.
- * @param[in] pass Password to use when connecting to the database server.
- * @param[in] database The name of the specific database to utilize.
+ * @param[in] DBConn* A pointer to the parent DBConn object for callbacks.
  * @retval false Returned if there was an error creating the connector.
  * @retval true Returned if the connector was successfully created.
  */
-const bool DBConn::MySQL::New( const string& host, const string& socket, const string& user, const string& pass, const string& database )
+const bool DBConn::MySQL::New( DBConn* dbconn )
 {
     UFLAGS_DE( flags );
-    bool valid = false;
+    pthread_attr_t res_attr;
+    pthread_t res_thread;
     uint_t sleep = 0;
 
-    if ( host.empty() )
-        LOGSTR( flags, "DBConn::MySQL::New()-> called with empty host" );
-    if ( socket.empty() )
-        LOGSTR( flags, "DBConn::MySQL::New()-> called with empty socket" );
-    if ( user.empty() )
-        LOGSTR( flags, "DBConn::MySQL::New()-> called with empty user" );
-    if ( pass.empty() )
-        LOGSTR( flags, "DBConn::MySQL::New()-> called with empty pass" );
-    if ( database.empty() )
-        LOGSTR( flags, "DBConn::MySQL::New()-> called with empty database" );
+    if ( dbconn == NULL )
+    {
+        LOGSTR( flags, "DBConn::MySQL::New()-> called with NULL dbconn" );
+        return false;
+    }
 
-    while ( !valid )
+    m_dbconn = dbconn;
+
+    if ( ::pthread_attr_init( &res_attr ) != 0 )
+    {
+        LOGERRNO( flags, "DBConn::MySQL::New()->pthread_attr_init()->" );
+        return false;
+    }
+
+    if ( ::pthread_attr_setdetachstate( &res_attr, PTHREAD_CREATE_DETACHED ) != 0 )
+    {
+        LOGERRNO( flags, "DBConn::MySQL::New()->pthread_attr_setdetachstate()->" );
+        return false;
+    }
+
+    if ( ::pthread_create( &res_thread, &res_attr, &DBConn::MySQL::Thread, this ) != 0 )
+    {
+        LOGERRNO( flags, "DBConn::MySQL::New()->pthread_create()->" );
+        return false;
+    }
+
+    if ( ::pthread_attr_destroy( &res_attr ) != 0 )
+    {
+        LOGERRNO( flags, "DBConn::MySQL::New()->pthread_attr_destroy()->" );
+        return false;
+    }
+
+    for ( ;; )
     {
         if ( ++sleep >= CFG_THR_MAX_TIMEOUT )
         {
             LOGSTR( flags, "DBConn::MySQL::New()-> timeout while attempting to connect" );
-            break;
+            return false;
         }
 
         if ( m_status == DBCONN_STATUS_NONE )
-            continue;
+            ::usleep( 1 );
         else if ( m_status == DBCONN_STATUS_ERROR )
         {
             LOGSTR( flags, "DBConn::MySQL::New()-> error while attempting to connect" );
-            break;
+            return false;
         }
         else if ( m_status == DBCONN_STATUS_VALID )
-            valid = true;
+            return true;
         else
         {
             LOGSTR( flags, "DBConn::MySQL::New()-> invalid status while attempting to connect" );
-            break;
+            return false;
         }
     }
 
-    return valid;
+    return true;
 }
 
 /**
@@ -125,22 +143,51 @@ const bool DBConn::New( const uint_t& type, const string& host, const string& so
     bool valid = false;
 
     if ( host.empty() )
+    {
         LOGSTR( flags, "DBConn::New()-> called with empty host" );
+        return false;
+    }
+    else
+        m_host = host;
+
     if ( socket.empty() )
+    {
         LOGSTR( flags, "DBConn::New()-> called with empty socket" );
+        return false;
+    }
+    else
+        m_socket = socket;
+
     if ( user.empty() )
+    {
         LOGSTR( flags, "DBConn::New()-> called with empty user" );
+        return false;
+    }
+    else
+        m_user = user;
+
     if ( pass.empty() )
+    {
         LOGSTR( flags, "DBConn::New()-> called with empty pass" );
+        return false;
+    }
+    else
+        m_pass = pass;
+
     if ( database.empty() )
+    {
         LOGSTR( flags, "DBConn::New()-> called with empty database" );
+        return false;
+    }
+    else
+        m_database = database;
 
     switch ( type )
     {
         case DBCONN_TYPE_MYSQL:
             m_mysql = new DBConn::MySQL();
 
-            if ( !m_mysql->New( host, socket, user, pass, database ) )
+            if ( !m_mysql->New( this ) )
                 LOGSTR( flags, "DBConn::New()->DBConn::MySQL()->New() returned false" );
             else
                 valid = true;
@@ -154,7 +201,7 @@ const bool DBConn::New( const uint_t& type, const string& host, const string& so
     if ( valid )
         m_type = type;
 
-    return valid;
+    return true;
 }
 
 /* Query */
@@ -167,6 +214,43 @@ const bool DBConn::New( const uint_t& type, const string& host, const string& so
  */
 void* DBConn::MySQL::Thread( void* data )
 {
+    UFLAGS_DE( flags );
+    uint_t port = uintmin_t;
+    bool valid = true;
+    DBConn::MySQL* dbconn_mysql = reinterpret_cast<DBConn::MySQL*>( data );
+
+    if ( mysql_init( &dbconn_mysql->m_sql ) == NULL )
+    {
+        dbconn_mysql->m_status = DBCONN_STATUS_ERROR;
+        LOGFMT( flags, "DBConn::MySQL::Thread()->mysql_init()-> %s", mysql_error( &dbconn_mysql->m_sql ) );
+        ::pthread_exit( reinterpret_cast<void*>( EXIT_FAILURE ) );
+    }
+
+    if ( mysql_options( &dbconn_mysql->m_sql, MYSQL_OPT_RECONNECT, &dbconn_mysql->m_reconnect ) != 0 )
+    {
+        dbconn_mysql->m_status = DBCONN_STATUS_ERROR;
+        LOGFMT( flags, "DBConn::MySQL::Thread()->mysql_options()-> %s", mysql_error( &dbconn_mysql->m_sql ) );
+        ::pthread_exit( reinterpret_cast<void*>( EXIT_FAILURE ) );
+    }
+
+    // Safer than ::stoi(), will output 0 for anything invalid
+    stringstream( dbconn_mysql->m_dbconn->m_socket ) >> port;
+
+    // Connect via unix socket
+    if ( port == 0 && ( mysql_real_connect( &dbconn_mysql->m_sql, CSTR( dbconn_mysql->m_dbconn->m_host ), CSTR( dbconn_mysql->m_dbconn->m_user ), CSTR( dbconn_mysql->m_dbconn->m_pass ), CSTR( dbconn_mysql->m_dbconn->m_database ), 0, CSTR( dbconn_mysql->m_dbconn->m_socket ), 0 ) == NULL ) )
+        valid = false;
+    else if ( mysql_real_connect( &dbconn_mysql->m_sql, CSTR( dbconn_mysql->m_dbconn->m_host ), CSTR( dbconn_mysql->m_dbconn->m_user ), CSTR( dbconn_mysql->m_dbconn->m_pass ), CSTR( dbconn_mysql->m_dbconn->m_database ), port, NULL, 0 ) == NULL )
+        valid = false;
+
+    if ( !valid )
+    {
+        dbconn_mysql->m_status = DBCONN_STATUS_ERROR;
+        LOGFMT( flags, "DBConn::MySQL::Thread()->mysql_real_connect()-> %s", mysql_error( &dbconn_mysql->m_sql ));
+        mysql_close( &dbconn_mysql->m_sql );
+
+        ::pthread_exit( reinterpret_cast<void*>( EXIT_FAILURE ) );
+    }
+
     ::pthread_exit( reinterpret_cast<void*>( EXIT_SUCCESS ) );
 }
 
@@ -176,6 +260,7 @@ void* DBConn::MySQL::Thread( void* data )
  */
 DBConn::MySQL::MySQL()
 {
+    m_dbconn = NULL;
     m_reconnect = true;
     m_status = uintmin_t;
 
@@ -196,8 +281,13 @@ DBConn::MySQL::~MySQL()
 DBConn::DBConn()
 {
     m_busy = false;
+    m_database.clear();
+    m_host.clear();
     m_mysql = NULL;
+    m_pass.clear();
+    m_socket.clear();
     m_type = uintmin_t;
+    m_user.clear();
 
     return;
 }
