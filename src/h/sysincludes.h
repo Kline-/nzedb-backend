@@ -39,6 +39,7 @@
 #include <iostream>
 #include <iterator>
 #include <sstream>
+#include <thread>
 #include <vector>
 
 #include <mysql/mysql.h>

@@ -39,9 +39,10 @@ enum DBCONN_STATUS
 {
     DBCONN_STATUS_NONE  = 0, /**< A newly initialized connector. */
     DBCONN_STATUS_ERROR = 1, /**< Connector failed to initialize or connect to the database. */
-    DBCONN_STATUS_VALID = 2, /**< Connector successfully connected to the database. */
+    DBCONN_STATUS_READY = 2, /**< Connector successfully connected to the database and is available for work. */
     DBCONN_STATUS_CLOSE = 3, /**< Connector is shutting down. */
-    MAX_DBCONN_STATUS   = 4  /**< Safety limit for looping. */
+    DBCONN_STATUS_BUSY  = 4, /**< Connector is busy processing a task. */
+    MAX_DBCONN_STATUS   = 5  /**< Safety limit for looping. */
 };
 
 /**

@@ -76,16 +76,17 @@ int main( const int argc, char* argv[] )
     }
 
 DBConn* dbconn = NULL;
-    for ( auto i = 0; i < 10; i++ )
-    {
+//    for ( auto i = 0; i < 10; i++ )
+//    {
         dbconn = new DBConn();
         if ( dbconn->New( DBCONN_TYPE_MYSQL, "localhost", "/var/run/mysqld/mysqld.sock", "nzedb", "nzedb", "nzedb" ) )
         {
             LOGSTR( flags, "Success!" );
             dbconn->Delete();
         }
-    }
-
+//    }
+mysql_library_end();
+::exit( EXIT_SUCCESS );
     while ( 1 )
     {
         Main::Update();
@@ -174,7 +175,7 @@ const void Main::PollDBConn()
         db = *vi;
         g_global->m_next_dbconn = ++vi;
 
-        if ( db->gStatus() == DBCONN_STATUS_VALID || db->gStatus() == DBCONN_STATUS_NONE )
+        if ( db->gStatus() == DBCONN_STATUS_READY || db->gStatus() == DBCONN_STATUS_NONE || db->gStatus() == DBCONN_STATUS_BUSY )
             continue;
         else if ( db->gStatus() == DBCONN_STATUS_ERROR )
         {
