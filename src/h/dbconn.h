@@ -51,7 +51,6 @@ class DBConn
             /**@}*/
 
             /** @name Manipulate */ /**@{*/
-            static void* Thread( void* data );
             /**@}*/
 
             /** @name Internal */ /**@{*/

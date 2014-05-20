@@ -39,8 +39,8 @@ struct ThreadData
 };
 
 const int compute_seconds( const ThreadData* data );
-const void spawn_thread( ThreadData* data );
-void* process_request( void* input );
+//const void spawn_thread( ThreadData* data );
+//void* process_request( void* input );
 chrono::high_resolution_clock::time_point time_current;
 
 // Eventually split this out to a config file and parse in nZEDb config files
@@ -200,7 +200,7 @@ const int compute_seconds( const ThreadData* data )
 
     return hours + minutes + seconds;
 }
-
+/*
 const void spawn_thread( ThreadData* data )
 {
     pthread_t res_thread;
@@ -224,3 +224,4 @@ void* process_request( void* input )
 
     return 0;
 }
+*/
