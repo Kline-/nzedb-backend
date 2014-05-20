@@ -294,7 +294,6 @@ DBConn::MySQL::~MySQL()
  */
 DBConn::DBConn()
 {
-    m_busy = false;
     m_database.clear();
     m_host.clear();
     m_mysql = NULL;
