@@ -86,7 +86,6 @@ class DBConn
         /**@}*/
 
     private:
-        bool m_busy; /**< Indicate if the connector is pending a query response. */
         string m_database; /**< Database to access on the database server. */
         string m_host; /**< Hostname of the database server. */
         DBConn::MySQL* m_mysql; /**< MySQL connector. */
