@@ -30,6 +30,8 @@
 #include "h/includes.h"
 #include "h/dbconn.h"
 
+#include "h/list.h"
+
 /* Core */
 /**
  * @brief Unload a MySQL database connector from memory that was previously loaded via DBConn::MySQL::New().
@@ -51,7 +53,6 @@ const bool DBConn::MySQL::New( DBConn* dbconn )
     UFLAGS_DE( flags );
     pthread_attr_t res_attr;
     pthread_t res_thread;
-//    uint_t sleep = 0;
 
     if ( dbconn == NULL )
     {
@@ -84,36 +85,11 @@ const bool DBConn::MySQL::New( DBConn* dbconn )
         LOGERRNO( flags, "DBConn::MySQL::New()->pthread_attr_destroy()->" );
         return false;
     }
-/*
-    for ( ;; )
-    {
-        if ( ++sleep >= CFG_THR_MAX_TIMEOUT )
-        {
-            LOGSTR( flags, "DBConn::MySQL::New()-> timeout while attempting to connect" );
-            return false;
-        }
 
-        if ( m_dbconn->m_status == DBCONN_STATUS_ERROR )
-        {
-            LOGSTR( flags, "DBConn::MySQL::New()-> error while attempting to connect" );
-            return false;
-        }
-        else if ( m_dbconn->m_status == DBCONN_STATUS_VALID )
-            return true;
-        else if ( m_dbconn->m_status == DBCONN_STATUS_CLOSE )
-        {
-            LOGSTR( flags, "DBConn::MySQL::New()-> connector closing down" );
-            return false;
-        }
-        else if ( m_dbconn->m_status == DBCONN_STATUS_NONE )
-            ::usleep( 1 );
-        else
-        {
-            LOGSTR( flags, "DBConn::MySQL::New()-> invalid status while attempting to connect" );
-            return false;
-        }
-    }
-*/
+    // Assume the thread will be successful; push the obj to list and validate it
+    // during routine update loops to avoid blocking here
+    dbconn_list.push_back( this->m_dbconn );
+
     return true;
 }
 

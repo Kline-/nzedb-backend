@@ -86,13 +86,6 @@
  * @par Default: 5
  */
 #define CFG_THR_SLEEP 5
-
-/**
- * @def CFG_THR_MAX_TIMEOUT
- * @brief Maximum time (in microseconds) to block while initializing a thread.
- * @par Default: 3000000
- */
-#define CFG_THR_MAX_TIMEOUT 3000000
 /**@}*/
 
 #endif

@@ -21,17 +21,23 @@
  * 3. This notice may not be removed or altered from any source distribution.
  **/
 /**
- * @file namespace.h
- * @brief All namespace includes.
+ * @file list.h
+ * @brief All globally referenced list / map / vector types.
  *
- * This file is a "header of headers" in that it only references other
- * headers within nzedb-backend that implement a namespace. This file
- * exists to more easily see and manage where namespaces are implemented.
+ * All list-type objects that are global in scope are referenced via this
+ * file. These are usually, but not always, containers that reference pointer
+ * objects to ensure proper tracking and memory cleanup later.
  */
-#ifndef DEC_NAMESPACE_H
-#define DEC_NAMESPACE_H
+#ifndef DEC_LIST_H
+#define DEC_LIST_H
 
-#include "main.h"
-#include "utils.h"
+using namespace std;
+
+/**
+ * @var dbconn_list
+ * @brief All database connectors that exist within the server.
+ * @param DBConn* A pointer to a DBConn object in memory.
+ */
+extern vector<DBConn*> dbconn_list;
 
 #endif

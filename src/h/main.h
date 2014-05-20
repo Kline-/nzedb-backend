@@ -21,17 +21,32 @@
  * 3. This notice may not be removed or altered from any source distribution.
  **/
 /**
- * @file namespace.h
- * @brief All namespace includes.
+ * @file main.h
+ * @brief The Main namespace.
  *
- * This file is a "header of headers" in that it only references other
- * headers within nzedb-backend that implement a namespace. This file
- * exists to more easily see and manage where namespaces are implemented.
+ * This file contains the Main namespace and template functions.
  */
-#ifndef DEC_NAMESPACE_H
-#define DEC_NAMESPACE_H
+#ifndef DEC_MAIN_H
+#define DEC_MAIN_H
 
-#include "main.h"
-#include "utils.h"
+using namespace std;
+
+/**
+ * @brief The Main namespace contains all central dispatch functions and templates.
+ */
+namespace Main
+{
+    /** @name Core */ /**@{*/
+    /**@}*/
+
+    /** @name Query */ /**@{*/
+    /**@}*/
+
+    /** @name Manipulate */ /**@{*/
+    /**@}*/
+
+    /** @name Internal */ /**@{*/
+    /**@}*/
+};
 
 #endif
