@@ -24,8 +24,11 @@
 #include "h/main.h"
 
 #include "h/dbconn.h"
+#include "h/list.h"
 
 using namespace std;
+
+Main::Global* g_global; /**< Global variables. */
 
 struct ThreadData
 {
@@ -61,10 +64,11 @@ int main( const int argc, char* argv[] )
 {
     UFLAGS_DE( flags );
 
-    time_current = chrono::high_resolution_clock::now();
+    // Initialize global variables
+    // Ensure globals are first as other items depend on them
+    g_global = new Main::Global();
 
     // This needs to be called prior to any threads firing off that may hit the DB
-
     if ( mysql_library_init( 0, NULL, NULL ) )
     {
         LOGSTR( flags, "Failed to initialize MySQL connector." );
@@ -80,6 +84,11 @@ DBConn* dbconn = NULL;
             LOGSTR( flags, "Success!" );
             dbconn->Delete();
         }
+    }
+
+    while ( 1 )
+    {
+        Main::Update();
     }
     // Fork to the background immediately to avoid shell output
     // daemon( 1, 0 );
@@ -107,6 +116,79 @@ DBConn* dbconn = NULL;
     mysql_library_end();
 
     return 0;
+}
+
+/* Core */
+/**
+ * @brief The core update loop of nzedb-backend. This loop spawns all other subsystem update routines and then sleeps for #CFG_THR_SLEEP each cycle.
+ * @retval void
+ */
+const void Main::Update()
+{
+    g_global->m_time_current = chrono::high_resolution_clock::now();
+
+    // Poll all database connectors
+    Main::PollDBConn();
+
+    // Sleep
+    ::usleep( CFG_THR_SLEEP );
+
+    return;
+}
+
+/* Query */
+
+/* Manipulate */
+
+/* Internal */
+/**
+ * @brief Constructor for the Main::Global class.
+ */
+Main::Global::Global()
+{
+    m_time_current = chrono::high_resolution_clock::now();
+
+    return;
+}
+
+/**
+ * @brief Destructor for the Main::Global class.
+ */
+Main::Global::~Global()
+{
+    return;
+}
+
+/**
+ * @brief Polls all DBConn objects to ensure validity and process updates.
+ * @retval void
+ */
+const void Main::PollDBConn()
+{
+    UFLAGS_DE( flags );
+    ITER( vector, DBConn*, vi );
+    DBConn* db;
+
+    for ( vi = dbconn_list.begin(); vi != dbconn_list.end(); vi = g_global->m_next_dbconn )
+    {
+        db = *vi;
+        g_global->m_next_dbconn = ++vi;
+
+        if ( db->gStatus() == DBCONN_STATUS_VALID || db->gStatus() == DBCONN_STATUS_NONE )
+            continue;
+        else if ( db->gStatus() == DBCONN_STATUS_ERROR )
+        {
+            LOGSTR( flags, "DBConn::MySQL::New()-> error while attempting to connect" );
+            db->Delete();
+        }
+        else if ( db->gStatus() == DBCONN_STATUS_CLOSE )
+        {
+            LOGSTR( flags, "DBConn::MySQL::New()-> connector closing down" );
+            db->Delete();
+        }
+    }
+
+    return;
 }
 
 const int compute_seconds( const ThreadData* data )
@@ -141,25 +223,3 @@ void* process_request( void* input )
 
     return 0;
 }
-/*
-   while ( m_dbconn->m_status == DBCONN_STATUS_NONE )
-    {
-        if ( m_dbconn->m_status == DBCONN_STATUS_VALID )
-            return true;
-        else if ( m_dbconn->m_status == DBCONN_STATUS_ERROR )
-        {
-            LOGSTR( flags, "DBConn::MySQL::New()-> error while attempting to connect" );
-            return false;
-        }
-        else if ( m_dbconn->m_status == DBCONN_STATUS_CLOSE )
-        {
-            LOGSTR( flags, "DBConn::MySQL::New()-> connector closing down" );
-            return false;
-        }
-        else if ( m_dbconn->m_status != DBCONN_STATUS_NONE )
-        {
-            LOGSTR( flags, "DBConn::MySQL::New()-> invalid status while attempting to connect" );
-            return false;
-        }
-    }
-*/

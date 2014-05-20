@@ -74,6 +74,7 @@ class DBConn
         /**@}*/
 
         /** @name Query */ /**@{*/
+        const uint_t gStatus();
         /**@}*/
 
         /** @name Manipulate */ /**@{*/

@@ -29,6 +29,6 @@
 #ifndef DEC_GLOBALS_H
 #define DEC_GLOBALS_H
 
-extern chrono::high_resolution_clock::time_point time_current;
+extern Main::Global* g_global; /**< Global variables. */
 
 #endif

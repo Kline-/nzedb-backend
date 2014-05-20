@@ -39,6 +39,8 @@
  */
 const void DBConn::MySQL::Delete()
 {
+    delete this;
+
     return;
 }
 
@@ -99,10 +101,13 @@ const bool DBConn::MySQL::New( DBConn* dbconn )
  */
 const void DBConn::Delete()
 {
-    if ( m_mysql != NULL )
-        delete m_mysql;
+    m_status = DBCONN_STATUS_CLOSE;
 
-    delete this;
+    if ( find( dbconn_list.begin(), dbconn_list.end(), this ) != dbconn_list.end() )
+        g_global->m_next_dbconn = dbconn_list.erase( find( dbconn_list.begin(), dbconn_list.end(), this ) );
+
+    if ( m_mysql != NULL )
+        m_mysql->Delete();
 
     return;
 }
@@ -186,6 +191,14 @@ const bool DBConn::New( const uint_t& type, const string& host, const string& so
 }
 
 /* Query */
+/**
+ * @brief Returns the current status of the database connector from #DBCONN_STATUS.
+ * @retval uint_t A uint_t associated to #DBCONN_STATUS.
+ */
+const uint_t DBConn::gStatus()
+{
+    return m_status;
+}
 
 /* Manipulate */
 /**
@@ -271,6 +284,8 @@ DBConn::MySQL::MySQL()
  */
 DBConn::MySQL::~MySQL()
 {
+    delete m_dbconn;
+
     return;
 }
 

@@ -32,6 +32,7 @@
 #ifndef DEC_SYSINCLUDES_H
 #define DEC_SYSINCLUDES_H
 
+#include <algorithm>
 #include <bitset>
 #include <chrono>
 #include <cstdarg>

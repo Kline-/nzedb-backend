@@ -221,7 +221,7 @@ const void Utils::_Logger( const uint_t& narg, const bitset<CFG_MEM_MAX_BITSET>&
         return;
 
     // prepend timestamp
-    pre = StrTime( chrono::high_resolution_clock::to_time_t( time_current ) );
+    pre = StrTime( chrono::high_resolution_clock::to_time_t( g_global->m_time_current ) );
     pre.append( " :: " );
 
     for ( i = 0; i < MAX_UTILS; i++ )
