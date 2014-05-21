@@ -29,58 +29,9 @@
 #include "h/includes.h"
 #include "h/dbconn_mysql.h"
 
-/**
- * @brief Sanity checks the parameters then threads off the actual connection.
- * @retval void
-
-const void DBConnMySQL::Connect()
-{
-    switch ( m_type )
-    {
-        case DBCONN_TYPE_MYSQL:
-            m_mysql = new DBConn::MySQL();
-        break;
-
-        default:
-            LOGFMT( flags, "DBConn::Connect()-> called with invalid type: %lu", m_type );
-        break;
-    }
-
-    thread( thread( tConnect, this ) ).detach();
-
-    return;
-}
-
-
+/*
 const void DBConnMySQL::tConnect()
 {
-    UFLAGS_DE( flags );
-    uint_t port = uintmin_t;
-    bool valid = true;
-
-    if ( dbconn == NULL )
-    {
-        LOGSTR( flags, "DBConn::MySQL::Connect()-> called with NULL dbconn" );
-        return false;
-    }
-
-    m_dbconn = dbconn;
-
-    if ( mysql_init( &m_sql ) == NULL )
-    {
-        m_dbconn->m_status = DBCONN_STATUS_ERROR;
-        LOGFMT( flags, "DBConn::MySQL::Thread()->mysql_init()-> %s", mysql_error( &m_sql ) );
-
-        return false;
-    }
-
-    if ( mysql_options( &m_sql, MYSQL_OPT_RECONNECT, &m_reconnect ) != 0 )
-    {
-        m_dbconn->m_status = DBCONN_STATUS_ERROR;
-        LOGFMT( flags, "DBConn::MySQL::Thread()->mysql_options()-> %s", mysql_error( &m_sql ) );
-
-        return false;
-    }
 
     // Safer than ::stoi(), will output 0 for anything invalid
     stringstream( m_dbconn->m_socket ) >> port;
@@ -125,6 +76,14 @@ const void DBConnMySQL::tConnect()
 const void DBConnMySQL::Connect( DBConnMySQL* mysql )
 {
     UFLAGS_DE( flags );
+    uint_t port = uintmin_t;
+    bool valid = true;
+
+    if ( mysql == NULL )
+    {
+        LOGSTR( flags, "DBConnMySQL::Connect()-> called with NULL mysql" );
+        return;
+    }
 
     if ( mysql->gHost().empty() )
     {
@@ -155,6 +114,28 @@ const void DBConnMySQL::Connect( DBConnMySQL* mysql )
         LOGSTR( flags, "DBConnMySQL::Connect()-> called with empty database" );
         return;
     }
+
+    if ( mysql_init( &mysql->m_sql ) == NULL )
+    {
+        mysql->sStatus( DBCONN_STATUS_ERROR );
+        LOGFMT( flags, "DBConnMySQL::Connect()->mysql_init()-> %s", mysql_error( &mysql->m_sql ) );
+
+        return;
+    }
+
+    if ( mysql_options( &mysql->m_sql, MYSQL_OPT_RECONNECT, &mysql->m_reconnect ) != 0 )
+    {
+        mysql->sStatus( DBCONN_STATUS_ERROR );
+        LOGFMT( flags, "DBConnMySQL::Connect()->mysql_options()-> %s", mysql_error( &mysql->m_sql ) );
+
+        return;
+    }
+if ( valid )
+port = 1;
+if ( port )
+valid = true;
+    // Now wait for events
+    mysql->Run();
 
     return;
 }

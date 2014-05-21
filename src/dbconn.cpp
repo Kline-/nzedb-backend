@@ -96,6 +96,26 @@ const string DBConn::gUser()
 }
 
 /**
+ * @brief Sets the current status of the database connector from #DBCONN_STATUS.
+ * @param[in] status The current status of the database connector from #DBCONN_STATUS.
+ * @retval void
+ */
+const void DBConn::sStatus( const uint_t& status )
+{
+    UFLAGS_DE( flags );
+
+    if ( status < uintmin_t || status >= MAX_DBCONN_STATUS )
+    {
+        LOGFMT( flags, "DBConn::sStatus()-> called with invalid status: %lu", status );
+        return;
+    }
+
+    m_status = status;
+
+    return;
+}
+
+/**
  * @brief Constructor for the DBConn class.
  */
 DBConn::DBConn( const uint_t& type, const string& host, const string& socket, const string& user, const string& pass, const string& database ) :

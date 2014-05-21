@@ -49,6 +49,9 @@ class DBConn
         DBConn( const uint_t& type, const string& host, const string& socket, const string& user, const string& pass, const string& database );
         virtual ~DBConn();
 
+    protected:
+        const void sStatus( const uint_t& status );
+
     private:
         virtual const void Run() = 0;
 
