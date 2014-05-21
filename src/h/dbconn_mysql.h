@@ -45,8 +45,7 @@ class DBConnMySQL : public DBConn
         ~DBConnMySQL();
 
     private:
-        static const void Connect( DBConnMySQL* mysql );
-        const void Run();
+        const void Connect();
 
         MYSQL m_sql; /**< Connection to the MySQL database. */
         my_bool m_reconnect; /**< Determine if the handler will attempt to reconnect when disconnected. */

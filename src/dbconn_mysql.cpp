@@ -33,92 +33,90 @@
 
 /**
  * @brief Connect to a MySQL database host.
- * @param[in] DBConnMySQL* The DBConnMySQL object to connect the database to.
+ * @param[in] void* The DBConnMySQL object to connect the database to.
  * @retval void
  */
-const void DBConnMySQL::Connect( DBConnMySQL* mysql )
+const void DBConnMySQL::Connect()
 {
     UFLAGS_DE( flags );
     uint_t port = uintmin_t;
     bool valid = true;
 
-    if ( mysql == NULL )
-    {
-        LOGSTR( flags, "DBConnMySQL::Connect()-> called with NULL mysql" );
-        return;
-    }
-
-    if ( mysql->gHost().empty() )
+    if ( gHost().empty() )
     {
         LOGSTR( flags, "DBConnMySQL::Connect()-> called with empty host" );
         return;
     }
 
-    if ( mysql->gSocket().empty() )
+    if ( gSocket().empty() )
     {
         LOGSTR( flags, "DBConnMySQL::Connect()-> called with empty socket" );
         return;
     }
 
-    if ( mysql->gUser().empty() )
+    if ( gUser().empty() )
     {
         LOGSTR( flags, "DBConnMySQL::Connect()-> called with empty user" );
         return;
     }
 
-    if ( mysql->gPass().empty() )
+    if ( gPass().empty() )
     {
         LOGSTR( flags, "DBConnMySQL::Connect()-> called with empty pass" );
         return;
     }
 
-    if ( mysql->gDatabase().empty() )
+    if ( gDatabase().empty() )
     {
         LOGSTR( flags, "DBConnMySQL::Connect()-> called with empty database" );
         return;
     }
 
-    if ( mysql_init( &mysql->m_sql ) == NULL )
+    if ( mysql_init( &m_sql ) == NULL )
     {
-        mysql->sStatus( DBCONN_STATUS_ERROR );
-        LOGFMT( flags, "DBConnMySQL::Connect()->mysql_init()-> %s", mysql_error( &mysql->m_sql ) );
+        sStatus( DBCONN_STATUS_ERROR );
+        LOGFMT( flags, "DBConnMySQL::Connect()->mysql_init()-> %s", mysql_error( &m_sql ) );
 
         return;
     }
 
-    if ( mysql_options( &mysql->m_sql, MYSQL_OPT_RECONNECT, &mysql->m_reconnect ) != 0 )
+    if ( mysql_options( &m_sql, MYSQL_OPT_RECONNECT, &m_reconnect ) != 0 )
     {
-        mysql->sStatus( DBCONN_STATUS_ERROR );
-        LOGFMT( flags, "DBConnMySQL::Connect()->mysql_options()-> %s", mysql_error( &mysql->m_sql ) );
+        sStatus( DBCONN_STATUS_ERROR );
+        LOGFMT( flags, "DBConnMySQL::Connect()->mysql_options()-> %s", mysql_error( &m_sql ) );
 
         return;
     }
 
     // Safer than ::stoi(), will output 0 for anything invalid
-    stringstream( mysql->gSocket() ) >> port;
+    stringstream( gSocket() ) >> port;
 
     // If port is 0, connect via unix socket
     if ( port == 0 )
     {
-        if ( mysql_real_connect( &mysql->m_sql, CSTR( mysql->gHost() ), CSTR( mysql->gUser() ), CSTR( mysql->gPass() ), CSTR( mysql->gDatabase() ), 0, CSTR( mysql->gSocket() ), 0 ) == NULL )
+        if ( mysql_real_connect( &m_sql, CSTR( gHost() ), CSTR( gUser() ), CSTR( gPass() ), CSTR( gDatabase() ), 0, CSTR( gSocket() ), 0 ) == NULL )
             valid = false;
     }
     else
     {
-        if ( mysql_real_connect( &mysql->m_sql, CSTR( mysql->gHost() ), CSTR( mysql->gUser() ), CSTR( mysql->gPass() ), CSTR( mysql->gDatabase() ), port, NULL, 0 ) == NULL )
+        if ( mysql_real_connect( &m_sql, CSTR( gHost() ), CSTR( gUser() ), CSTR( gPass() ), CSTR( gDatabase() ), port, NULL, 0 ) == NULL )
             valid = false;
     }
 
     if ( !valid )
     {
-        mysql->sStatus( DBCONN_STATUS_ERROR );
-        LOGFMT( flags, "DBConnMySQL::Connect()->mysql_real_connect()-> %s", mysql_error( &mysql->m_sql ) );
+        sStatus( DBCONN_STATUS_ERROR );
+        LOGFMT( flags, "DBConnMySQL::Connect()->mysql_real_connect()-> %s", mysql_error( &m_sql ) );
 
         return;
     }
 
-    // Now wait for events
-    mysql->Run();
+    LOGFMT( 0, "MySQL server connected: %s", CSTR( gHost() ) );
+
+    // Assume the thread will be successful; push the obj to list and validate it
+    // during routine update loops to avoid blocking here
+    sStatus( DBCONN_STATUS_READY );
+    dbconn_list.push_back( this );
 
     return;
 }
@@ -215,29 +213,10 @@ const vector<vector<string>> DBConnMySQL::Query( const string& query )
             result[x][y] = row[y];
     }
 
-    return result;
-}
-
-/**
- * @brief Process events in the thread.
- * @retval void
- */
-const void DBConnMySQL::Run()
-{
-    LOGFMT( 0, "MySQL server connected: %s", CSTR( gHost() ) );
-
-    // Assume the thread will be successful; push the obj to list and validate it
-    // during routine update loops to avoid blocking here
+    mysql_free_result( res );
     sStatus( DBCONN_STATUS_READY );
-    dbconn_list.push_back( this );
 
-    while ( !g_global->m_shutdown )
-    {
-        this_thread::yield();
-        ::usleep( CFG_THR_SLEEP );
-    }
-
-    return;
+    return result;
 }
 
 /**
@@ -248,7 +227,7 @@ DBConnMySQL::DBConnMySQL( const uint_t& type, const string& host, const string& 
 {
     m_reconnect = true;
 
-    thread( thread( Connect, this ) ).detach();
+    Connect();
 
     return;
 }

@@ -191,7 +191,6 @@ Main::Global::Global()
 {
     m_next_dbconn = dbconn_list.begin();
     m_shutdown = true;
-    m_threads.clear();
     m_time_current = chrono::high_resolution_clock::now();
 
     return;
