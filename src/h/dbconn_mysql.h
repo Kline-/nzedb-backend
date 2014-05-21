@@ -49,8 +49,6 @@ class DBConnMySQL : public DBConn
         const void Run();
 
         MYSQL m_sql; /**< Connection to the MySQL database. */
-        MYSQL_RES* m_res; /**< The result set from a query. */
-        MYSQL_ROW m_row; /**< One row of data from a query. */
         my_bool m_reconnect; /**< Determine if the handler will attempt to reconnect when disconnected. */
 };
 

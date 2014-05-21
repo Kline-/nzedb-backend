@@ -130,7 +130,92 @@ const void DBConnMySQL::Connect( DBConnMySQL* mysql )
  */
 const vector<vector<string>> DBConnMySQL::Query( const string& query )
 {
-    return vector<vector<string>>();
+    UFLAGS_DE( flags );
+    MYSQL_RES* res;
+    MYSQL_ROW row;
+    uint_t rows = 0, length = 0;
+    vector<vector<string>> result;
+
+    // Busy out to ensure work goes to other threads
+    sStatus( DBCONN_STATUS_BUSY );
+
+    if ( query.empty() )
+    {
+        sStatus( DBCONN_STATUS_READY );
+        LOGSTR( flags, "DBConnMySQL::Query-> called with empty query" );
+
+        return result;
+    }
+
+    if ( mysql_query( &m_sql, CSTR( query ) ) )
+    {
+        sStatus( DBCONN_STATUS_READY );
+        LOGFMT( flags, "DBConnMySQL::Query()->mysql_query()-> %s", mysql_error( &m_sql ) );
+
+        return result;
+    }
+    else if ( ( res = mysql_store_result( &m_sql ) ) == NULL )
+    {
+        sStatus( DBCONN_STATUS_READY );
+        LOGFMT( flags, "DBConnMySQL::Query()->mysql_store_result()-> %s", mysql_error( &m_sql ) );
+
+        return result;
+    }
+    else if ( ( length = mysql_field_count( &m_sql ) ) == 0 )
+    {
+        sStatus( DBCONN_STATUS_READY );
+        LOGFMT( flags, "DBConnMySQL::Query()->mysql_field_count()-> %s", mysql_error( &m_sql ) );
+
+        return result;
+    }
+    else if ( ( rows = mysql_num_rows( res ) ) == 0 )
+    {
+        sStatus( DBCONN_STATUS_READY );
+        LOGFMT( flags, "DBConnMySQL::Query()->mysql_num_rows()-> %s", mysql_error( &m_sql ) );
+
+        return result;
+    }
+
+    // Since the first row is used to pass metadata, increment the count
+    rows++;
+
+    // Resize the result to permit access via operator[]
+    result.resize( rows );
+
+    // Need a minimum length of 2 to pass metadata, but don't modify length
+    // itself to ensure proper column count in the result set
+    if ( length < 2 )
+    {
+        for ( uint_t i = 0; i < rows; i++ )
+            result[i].resize( 2 );
+    }
+    else
+    {
+        for ( uint_t i = 0; i < rows; i++ )
+            result[i].resize( length );
+    }
+
+    // Store the number of columns in result[0][0] and number of rows in reslt[0][1]
+    result[0][0] = length;
+    result[0][1] = rows;
+
+    // At this point there is a valid result set and each row
+    // needs to be iterated through and moved to the vector
+    for ( uint_t x = 1; x < rows; x++ )
+    {
+        if ( ( row = mysql_fetch_row( res ) ) == NULL )
+        {
+            sStatus( DBCONN_STATUS_READY );
+            LOGFMT( flags, "DBConnMySQL::Query()->mysql_fetch_row()-> %s", mysql_error( &m_sql ) );
+
+            return result;
+        }
+
+        for ( uint_t y = 0; y < length; y++ )
+            result[x][y] = row[y];
+    }
+
+    return result;
 }
 
 /**
