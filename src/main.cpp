@@ -78,14 +78,17 @@ int main( const int argc, char* argv[] )
 DBConn* dbconn = NULL;
 //    for ( auto i = 0; i < 10; i++ )
 //    {
-        dbconn = new DBConn();
-        if ( dbconn->New( DBCONN_TYPE_MYSQL, "localhost", "/var/run/mysqld/mysqld.sock", "nzedb", "nzedb", "nzedb" ) )
-        {
-            LOGSTR( flags, "Success!" );
-            dbconn->Delete();
-        }
+        dbconn = new DBConn( DBCONN_TYPE_MYSQL, "", "/var/run/mysqld/mysqld.sock", "nzedb", "nzedb", "nzedb"  );
+//thread( dbconn->New, DBCONN_TYPE_MYSQL, "localhost", "/var/run/mysqld/mysqld.sock", "nzedb", "nzedb", "nzedb" );
+//        if ( dbconn->New( DBCONN_TYPE_MYSQL, "localhost", "/var/run/mysqld/mysqld.sock", "nzedb", "nzedb", "nzedb" ) )
+//        {
+//            LOGSTR( flags, "Success!" );
+//            dbconn->Delete();
+//        }
 //    }
+delete dbconn;
 mysql_library_end();
+delete g_global;
 ::exit( EXIT_SUCCESS );
     while ( 1 )
     {
@@ -180,12 +183,14 @@ const void Main::PollDBConn()
         else if ( db->gStatus() == DBCONN_STATUS_ERROR )
         {
             LOGSTR( flags, "DBConn::MySQL::New()-> error while attempting to connect" );
-            db->Delete();
+            delete db;
+            continue;
         }
         else if ( db->gStatus() == DBCONN_STATUS_CLOSE )
         {
             LOGSTR( flags, "DBConn::MySQL::New()-> connector closing down" );
-            db->Delete();
+            delete db;
+            continue;
         }
     }
 

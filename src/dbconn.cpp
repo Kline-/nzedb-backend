@@ -34,26 +34,12 @@
 
 /* Core */
 /**
- * @brief Unload a MySQL database connector from memory that was previously loaded via DBConn::MySQL::New().
- * @retval void
- */
-const void DBConn::MySQL::Delete()
-{
-    mysql_close( &m_sql );
-    mysql_thread_end();
-
-    delete this;
-
-    return;
-}
-
-/**
- * @brief Create a new MySQL connector.
+ * @brief Connect to a MySQL database host.
  * @param[in] DBConn* A pointer to the parent DBConn object for callbacks.
  * @retval false Returned if there was an error creating the connector.
  * @retval true Returned if the connector was successfully created.
  */
-const bool DBConn::MySQL::New( DBConn* dbconn )
+const bool DBConn::MySQL::Connect( DBConn* dbconn )
 {
     UFLAGS_DE( flags );
     uint_t port = uintmin_t;
@@ -61,7 +47,7 @@ const bool DBConn::MySQL::New( DBConn* dbconn )
 
     if ( dbconn == NULL )
     {
-        LOGSTR( flags, "DBConn::MySQL::New()-> called with NULL dbconn" );
+        LOGSTR( flags, "DBConn::MySQL::Connect()-> called with NULL dbconn" );
         return false;
     }
 
@@ -117,101 +103,6 @@ const bool DBConn::MySQL::New( DBConn* dbconn )
     return true;
 }
 
-/**
- * @brief Unload a database connector from memory that was previously loaded via DBConn::New().
- * @retval void
- */
-const void DBConn::Delete()
-{
-    m_status = DBCONN_STATUS_CLOSE;
-
-    if ( find( dbconn_list.begin(), dbconn_list.end(), this ) != dbconn_list.end() )
-        g_global->m_next_dbconn = dbconn_list.erase( find( dbconn_list.begin(), dbconn_list.end(), this ) );
-
-    if ( m_mysql != NULL )
-        m_mysql->Delete();
-
-    return;
-}
-
-/**
- * @brief Create a new database connection.
- * @param[in] type The database connector to use, from #DBCONN_TYPE.
- * @param[in] host The hostname or IP address of the server to connect to.
- * @param[in] socket The unix socket file or port number of the server to connect to.
- * @param[in] user Username to use when connecting to the database server.
- * @param[in] pass Password to use when connecting to the database server.
- * @param[in] database The name of the specific database to utilize.
- * @retval false Returned if there was an error connecting to the database.
- * @retval true Returned if a databaes connection was successfully established.
- */
-const bool DBConn::New( const uint_t& type, const string& host, const string& socket, const string& user, const string& pass, const string& database )
-{
-    UFLAGS_DE( flags );
-    bool valid = false;
-
-    if ( host.empty() )
-    {
-        LOGSTR( flags, "DBConn::New()-> called with empty host" );
-        return false;
-    }
-    else
-        m_host = host;
-
-    if ( socket.empty() )
-    {
-        LOGSTR( flags, "DBConn::New()-> called with empty socket" );
-        return false;
-    }
-    else
-        m_socket = socket;
-
-    if ( user.empty() )
-    {
-        LOGSTR( flags, "DBConn::New()-> called with empty user" );
-        return false;
-    }
-    else
-        m_user = user;
-
-    if ( pass.empty() )
-    {
-        LOGSTR( flags, "DBConn::New()-> called with empty pass" );
-        return false;
-    }
-    else
-        m_pass = pass;
-
-    if ( database.empty() )
-    {
-        LOGSTR( flags, "DBConn::New()-> called with empty database" );
-        return false;
-    }
-    else
-        m_database = database;
-
-    switch ( type )
-    {
-        case DBCONN_TYPE_MYSQL:
-            m_mysql = new DBConn::MySQL();
-
-            if ( !m_mysql->New( this ) )
-                LOGSTR( flags, "DBConn::New()->DBConn::MySQL()->New() returned false" );
-            else
-                valid = true;
-        break;
-
-        default:
-            LOGFMT( flags, "DBConn::New()-> called with invalid type: %lu", type );
-        break;
-    }
-
-    if ( valid )
-        m_type = type;
-
-    return true;
-}
-
 /* Query */
 /**
  * @brief Returns the current status of the database connector from #DBCONN_STATUS.
@@ -225,6 +116,86 @@ const uint_t DBConn::gStatus()
 /* Manipulate */
 
 /* Internal */
+/**
+ * @brief Sanity checks the parameters then threads off the actual connection.
+ * @retval void
+ */
+const void DBConn::Connect()
+{
+    UFLAGS_DE( flags );
+
+    if ( m_host.empty() )
+    {
+        LOGSTR( flags, "DBConn::Connect()-> called with empty host" );
+        return;
+    }
+
+    if ( m_socket.empty() )
+    {
+        LOGSTR( flags, "DBConn::Connect()-> called with empty socket" );
+        return;
+    }
+
+    if ( m_user.empty() )
+    {
+        LOGSTR( flags, "DBConn::Connect()-> called with empty user" );
+        return;
+    }
+
+    if ( m_pass.empty() )
+    {
+        LOGSTR( flags, "DBConn::Connect()-> called with empty pass" );
+        return;
+    }
+
+    if ( m_database.empty() )
+    {
+        LOGSTR( flags, "DBConn::Connect()-> called with empty database" );
+        return;
+    }
+
+    switch ( m_type )
+    {
+        case DBCONN_TYPE_MYSQL:
+            m_mysql = new DBConn::MySQL();
+        break;
+
+        default:
+            LOGFMT( flags, "DBConn::Connect()-> called with invalid type: %lu", m_type );
+        break;
+    }
+
+    thread( tConnect, this );
+
+    return;
+}
+
+/**
+ * @brief Initializes the database connector via the appropriate handler.
+ * @retval void
+ */
+const void DBConn::tConnect( DBConn* dbconn )
+{
+    UFLAGS_DE( flags );
+
+    switch ( dbconn->m_type )
+    {
+        case DBCONN_TYPE_MYSQL:
+            if ( !dbconn->m_mysql->Connect( dbconn ) )
+            {
+                LOGSTR( flags, "DBConn::tConnect()->DBConn::MySQL::Connect()-> returned false" );
+                return;
+            }
+        break;
+
+        default:
+            LOGFMT( flags, "DBConn::tConnect()-> called with invalid type: %lu", dbconn->m_type );
+        break;
+    }
+
+    return;
+}
+
 /**
  * @brief Constructor for the DBConn::MySQL clasas.
  */
@@ -241,7 +212,8 @@ DBConn::MySQL::MySQL()
  */
 DBConn::MySQL::~MySQL()
 {
-    delete m_dbconn;
+    mysql_close( &m_sql );
+    mysql_thread_end();
 
     return;
 }
@@ -249,16 +221,11 @@ DBConn::MySQL::~MySQL()
 /**
  * @brief Constructor for the DBConn class.
  */
-DBConn::DBConn()
+DBConn::DBConn( const uint_t& type, const string& host, const string& socket, const string& user, const string& pass, const string& database ) :
+    m_type( type ), m_host( host ), m_socket( socket ), m_user( user ), m_pass( pass ), m_database( database )
 {
-    m_database.clear();
-    m_host.clear();
     m_mysql = NULL;
-    m_pass.clear();
-    m_socket.clear();
     m_status = uintmin_t;
-    m_type = uintmin_t;
-    m_user.clear();
 
     return;
 }
@@ -268,5 +235,13 @@ DBConn::DBConn()
  */
 DBConn::~DBConn()
 {
+    m_status = DBCONN_STATUS_CLOSE;
+
+    if ( find( dbconn_list.begin(), dbconn_list.end(), this ) != dbconn_list.end() )
+        g_global->m_next_dbconn = dbconn_list.erase( find( dbconn_list.begin(), dbconn_list.end(), this ) );
+
+    if ( m_mysql != NULL )
+        delete m_mysql;
+
     return;
 }

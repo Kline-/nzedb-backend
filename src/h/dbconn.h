@@ -43,8 +43,7 @@ class DBConn
     {
         public:
             /** @name Core */ /**@{*/
-            const void Delete();
-            const bool New( DBConn* dbconn );
+            const bool Connect( DBConn* dbconn );
             /**@}*/
 
             /** @name Query */ /**@{*/
@@ -68,8 +67,6 @@ class DBConn
 
     public:
         /** @name Core */ /**@{*/
-        const void Delete();
-        const bool New( const uint_t& type, const string& host, const string& socket, const string& user, const string& pass, const string& database );
         /**@}*/
 
         /** @name Query */ /**@{*/
@@ -80,19 +77,21 @@ class DBConn
         /**@}*/
 
         /** @name Internal */ /**@{*/
-        DBConn();
+        DBConn( const uint_t& type, const string& host, const string& socket, const string& user, const string& pass, const string& database );
         ~DBConn();
         /**@}*/
 
     private:
-        string m_database; /**< Database to access on the database server. */
-        string m_host; /**< Hostname of the database server. */
-        DBConn::MySQL* m_mysql; /**< MySQL connector. */
-        string m_pass; /**< Password to login to the database server with. */
-        string m_socket; /**< Unix socket or port number of the database server. */
-        uint_t m_status; /**< Callback to check if the thread made a successful connection. */
+        const void Connect();
+        static const void tConnect( DBConn* dbconn );
         uint_t m_type; /**< The type of connector to utilize from #DBCONN_TYPE. */
+        string m_host; /**< Hostname of the database server. */
+        string m_socket; /**< Unix socket or port number of the database server. */
         string m_user; /**< Username to login to the database server with. */
+        string m_pass; /**< Password to login to the database server with. */
+        string m_database; /**< Database to access on the database server. */
+        DBConn::MySQL* m_mysql; /**< MySQL connector. */
+        uint_t m_status; /**< Callback to check if the thread made a successful connection. */
 };
 
 #endif
