@@ -33,12 +33,66 @@
 #include "h/list.h"
 
 /**
+ * @brief Returns the current database of the database connector.
+ * @retval string The current database of the database connector.
+ */
+const string DBConn::gDatabase()
+{
+    return m_database;
+}
+
+/**
+ * @brief Returns the current host of the database connector.
+ * @retval string The current host of the database connector.
+ */
+const string DBConn::gHost()
+{
+    return m_host;
+}
+
+/**
+ * @brief Returns the current pass of the database connector.
+ * @retval string The current pass of the database connector.
+ */
+const string DBConn::gPass()
+{
+    return m_pass;
+}
+
+/**
+ * @brief Returns the current type of the database connector from #DBCONN_TYPE.
+ * @retval uint_t A uint_t associated to #DBCONN_TYPE.
+ */
+const uint_t DBConn::gType()
+{
+    return m_type;
+}
+
+/**
+ * @brief Returns the current socket of the database connector.
+ * @retval string The current socket of the database connector.
+ */
+const string DBConn::gSocket()
+{
+    return m_socket;
+}
+
+/**
  * @brief Returns the current status of the database connector from #DBCONN_STATUS.
  * @retval uint_t A uint_t associated to #DBCONN_STATUS.
  */
 const uint_t DBConn::gStatus()
 {
     return m_status;
+}
+
+/**
+ * @brief Returns the current user of the database connector.
+ * @retval string The current user of the database connector.
+ */
+const string DBConn::gUser()
+{
+    return m_user;
 }
 
 /**

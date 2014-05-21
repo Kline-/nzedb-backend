@@ -35,38 +35,6 @@
 
 const void DBConnMySQL::Connect()
 {
-    UFLAGS_DE( flags );
-
-    if ( m_host.empty() )
-    {
-        LOGSTR( flags, "DBConn::Connect()-> called with empty host" );
-        return;
-    }
-
-    if ( m_socket.empty() )
-    {
-        LOGSTR( flags, "DBConn::Connect()-> called with empty socket" );
-        return;
-    }
-
-    if ( m_user.empty() )
-    {
-        LOGSTR( flags, "DBConn::Connect()-> called with empty user" );
-        return;
-    }
-
-    if ( m_pass.empty() )
-    {
-        LOGSTR( flags, "DBConn::Connect()-> called with empty pass" );
-        return;
-    }
-
-    if ( m_database.empty() )
-    {
-        LOGSTR( flags, "DBConn::Connect()-> called with empty database" );
-        return;
-    }
-
     switch ( m_type )
     {
         case DBCONN_TYPE_MYSQL:
@@ -83,9 +51,6 @@ const void DBConnMySQL::Connect()
     return;
 }
 
-
- * @brief Connect to a MySQL database host.
- * @retval void
 
 const void DBConnMySQL::tConnect()
 {
@@ -152,9 +117,56 @@ const void DBConnMySQL::tConnect()
 
 */
 
-const vector< vector<string> > DBConnMySQL::Query( const string& query )
+/**
+ * @brief Connect to a MySQL database host.
+ * @param[in] DBConnMySQL* The DBConnMySQL object to connect the database to.
+ * @retval void
+ */
+const void DBConnMySQL::Connect( DBConnMySQL* mysql )
 {
-    return vector< vector<string> >();
+    UFLAGS_DE( flags );
+
+    if ( mysql->gHost().empty() )
+    {
+        LOGSTR( flags, "DBConnMySQL::Connect()-> called with empty host" );
+        return;
+    }
+
+    if ( mysql->gSocket().empty() )
+    {
+        LOGSTR( flags, "DBConnMySQL::Connect()-> called with empty socket" );
+        return;
+    }
+
+    if ( mysql->gUser().empty() )
+    {
+        LOGSTR( flags, "DBConnMySQL::Connect()-> called with empty user" );
+        return;
+    }
+
+    if ( mysql->gPass().empty() )
+    {
+        LOGSTR( flags, "DBConnMySQL::Connect()-> called with empty pass" );
+        return;
+    }
+
+    if ( mysql->gDatabase().empty() )
+    {
+        LOGSTR( flags, "DBConnMySQL::Connect()-> called with empty database" );
+        return;
+    }
+
+    return;
+}
+
+/**
+ * @brief Run a query against the database and return a result set in a neutral format.
+ * @param[in] query The query to execute against the database.
+ * @retval vector<vector<string>> The result set of the query.
+ */
+const vector<vector<string>> DBConnMySQL::Query( const string& query )
+{
+    return vector<vector<string>>();
 }
 
 /**
@@ -179,6 +191,8 @@ DBConnMySQL::DBConnMySQL( const uint_t& type, const string& host, const string& 
     DBConn::DBConn( type, host, socket, user, pass, database )
 {
     m_reconnect = true;
+
+    thread( thread( Connect, this ) ).detach();
 
     return;
 }

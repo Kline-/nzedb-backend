@@ -37,8 +37,14 @@ using namespace std;
 class DBConn
 {
     public:
-        virtual const vector< vector<string> > Query( const string& query ) = 0;
+        virtual const vector<vector<string>> Query( const string& query ) = 0;
+        const string gDatabase();
+        const string gHost();
+        const string gPass();
+        const string gSocket();
         const uint_t gStatus();
+        const uint_t gType();
+        const string gUser();
 
         DBConn( const uint_t& type, const string& host, const string& socket, const string& user, const string& pass, const string& database );
         virtual ~DBConn();

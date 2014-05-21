@@ -39,14 +39,13 @@ using namespace std;
 class DBConnMySQL : public DBConn
 {
     public:
-        const vector< vector<string> > Query( const string& query );
+        const vector<vector<string>> Query( const string& query );
 
         DBConnMySQL( const uint_t& type, const string& host, const string& socket, const string& user, const string& pass, const string& database );
         ~DBConnMySQL();
 
     private:
-        const void Connect();
-        static const void tConnect();
+        static const void Connect( DBConnMySQL* mysql );
         const void Run();
 
         MYSQL m_sql; /**< Connection to the MySQL database. */
