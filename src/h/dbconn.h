@@ -64,6 +64,7 @@ class DBConn
     private:
         const void Connect();
         static const void tConnect( DBConn* dbconn );
+        const void Run();
         uint_t m_type; /**< The type of connector to utilize from #DBCONN_TYPE. */
         string m_host; /**< Hostname of the database server. */
         string m_socket; /**< Unix socket or port number of the database server. */

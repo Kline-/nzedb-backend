@@ -75,19 +75,9 @@ int main( const int argc, char* argv[] )
         ::exit( EXIT_FAILURE );
     }
 
-    DBConn* dbconn = NULL;
-    dbconn = new DBConn( DBCONN_TYPE_MYSQL, "localhost", "/var/run/mysqld/mysqld.sock", "nzedb", "nzedb", "nzedb"  );
-while ( !g_global->m_threads.empty()  )
-{
-    (*g_global->m_threads.begin()).join();
-    ::usleep( 10000 );
-}
-    delete dbconn;
-    mysql_library_end();
-    delete g_global;
-    ::exit( EXIT_SUCCESS );
+    new DBConn( DBCONN_TYPE_MYSQL, "localhost", "/var/run/mysqld/mysqld.sock", "nzedb", "nzedb", "nzedb" );
 
-    while ( 1 )
+    while ( !g_global->m_shutdown )
     {
         Main::Update();
     }
@@ -142,6 +132,7 @@ const void Main::Update()
 Main::Global::Global()
 {
     m_next_dbconn = dbconn_list.begin();
+    m_shutdown = false;
     m_threads.clear();
     m_time_current = chrono::high_resolution_clock::now();
 

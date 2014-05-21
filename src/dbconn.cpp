@@ -157,7 +157,7 @@ const void DBConn::Connect()
         break;
     }
 
-    g_global->m_threads.push_back( thread( tConnect, this ) );
+    thread( thread( tConnect, this ) ).detach();
 
     return;
 }
@@ -186,10 +186,21 @@ const void DBConn::tConnect( DBConn* dbconn )
         break;
     }
 
-    while ( dbconn->m_status != DBCONN_STATUS_BUSY  )
+    dbconn->Run();
+
+    return;
+}
+
+/**
+ * @brief Process events in the thread.
+ * @retval void
+ */
+const void DBConn::Run()
+{
+    while ( !g_global->m_shutdown )
     {
         this_thread::yield();
-        sleep( 1 );
+        ::usleep( CFG_THR_SLEEP );
     }
 
     return;
