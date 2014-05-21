@@ -23,7 +23,7 @@
 #include "h/includes.h"
 #include "h/main.h"
 
-#include "h/dbconn.h"
+#include "h/dbconn_mysql.h"
 #include "h/list.h"
 
 using namespace std;
@@ -68,20 +68,13 @@ int main( const int argc, char* argv[] )
     // Ensure globals are first as other items depend on them
     g_global = new Main::Global();
 
-    // This needs to be called prior to any threads firing off that may hit the DB
-    if ( mysql_library_init( 0, NULL, NULL ) )
-    {
-        LOGSTR( flags, "Failed to initialize MySQL connector." );
-        ::exit( EXIT_FAILURE );
-    }
-
-//    if ( dbconn_list.size() < CFG_MEM_MAX_DBCONN )
-//        new DBConn( DBCONN_TYPE_MYSQL, "localhost", "/var/run/mysqld/mysqld.sock", "nzedb", "nzedb", "nzedb" );
+    if ( argc > 1 )
+        Main::Startup( argv[1] );
+    else
+        Main::Startup();
 
     while ( !g_global->m_shutdown )
-    {
         Main::Update();
-    }
     // Fork to the background immediately to avoid shell output
     // daemon( 1, 0 );
 /*
@@ -111,6 +104,36 @@ int main( const int argc, char* argv[] )
 }
 
 /**
+ * @brief Start the nzedb-backend server.
+ * @param[in] config An optional path to a configuration file to load.
+ * @retval void
+ */
+const void Main::Startup( const string& config )
+{
+    UFLAGS_DE( flags );
+    g_global->m_shutdown = false;
+
+    LOGFMT( 0, "%s started.", CFG_STR_VERSION );
+
+    // This needs to be called prior to any threads firing off that may hit the DB
+    if ( mysql_library_init( 0, NULL, NULL ) )
+    {
+        LOGSTR( flags, "Failed to initialize MySQL connector." );
+        ::exit( EXIT_FAILURE );
+    }
+
+    for ( auto i = 0; i < CFG_MEM_MAX_DBCONN; i++ )
+        new DBConnMySQL( DBCONN_TYPE_MYSQL, "localhost", "/var/run/mysqld/mysqld.sock", "nzedb", "nzedb", "nzedb" );
+
+    // Wait for the threads to all initialize otherwise to ensure the update loop doesn't poll
+    // them before they are ready
+    while ( dbconn_list.size() < CFG_MEM_MAX_DBCONN )
+        ::usleep( CFG_THR_SLEEP );
+
+    return;
+}
+
+/**
  * @brief The core update loop of nzedb-backend. This loop spawns all other subsystem update routines and then sleeps for #CFG_THR_SLEEP each cycle.
  * @retval void
  */
@@ -124,27 +147,6 @@ const void Main::Update()
     // Sleep
     ::usleep( CFG_THR_SLEEP );
 
-    return;
-}
-
-/**
- * @brief Constructor for the Main::Global class.
- */
-Main::Global::Global()
-{
-    m_next_dbconn = dbconn_list.begin();
-    m_shutdown = false;
-    m_threads.clear();
-    m_time_current = chrono::high_resolution_clock::now();
-
-    return;
-}
-
-/**
- * @brief Destructor for the Main::Global class.
- */
-Main::Global::~Global()
-{
     return;
 }
 
@@ -179,6 +181,27 @@ const void Main::PollDBConn()
         }
     }
 
+    return;
+}
+
+/**
+ * @brief Constructor for the Main::Global class.
+ */
+Main::Global::Global()
+{
+    m_next_dbconn = dbconn_list.begin();
+    m_shutdown = true;
+    m_threads.clear();
+    m_time_current = chrono::high_resolution_clock::now();
+
+    return;
+}
+
+/**
+ * @brief Destructor for the Main::Global class.
+ */
+Main::Global::~Global()
+{
     return;
 }
 

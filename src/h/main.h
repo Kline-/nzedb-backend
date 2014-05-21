@@ -53,6 +53,7 @@ namespace Main
             chrono::high_resolution_clock::time_point m_time_current; /**< Current time from the host OS. */
     };
 
+    const void Startup( const string& config = "" );
     const void Update();
     const void PollDBConn();
 };
