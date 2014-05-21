@@ -22,7 +22,7 @@ endif
 
 MAKEFLAGS = -s
 W_FLAGS = -Wall -Wformat-security -Wpointer-arith -Wredundant-decls -Wcast-align -Wshadow -Wwrite-strings -Werror
-L_FLAGS = -lmysqlclient_r
+L_FLAGS = -lpthread -lmysqlclient_r
 
 C_FILES = $(wildcard *.cpp)
 O_FILES = $(patsubst %.cpp,o/%.o,$(C_FILES))
