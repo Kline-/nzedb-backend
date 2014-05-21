@@ -41,6 +41,13 @@
  * @par Default: 128
  */
 #define CFG_MEM_MAX_BITSET 128
+
+/**
+ * @def CFG_MEM_MAX_DBCONN
+ * @brief Maximum number of database connections to open at once.
+ * @par Default: 4
+ */
+#define CFG_MEM_MAX_DBCONN 4
 /**@}*/
 
 /***************************************************************************

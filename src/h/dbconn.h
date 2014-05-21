@@ -32,46 +32,26 @@
 using namespace std;
 
 /**
- * @brief An instance of a database connector.
+ * @brief Functions and common interface to all database connectors.
  */
 class DBConn
 {
-    /**
-     * @brief MySQL backend.
-     */
-    class MySQL
-    {
-        public:
-            const bool Connect( DBConn* dbconn );
-
-            MySQL();
-            ~MySQL();
-
-        private:
-            DBConn* m_dbconn; /**< Parent DBConn for callback. */
-            MYSQL m_sql; /**< Connection to the MySQL database. */
-            MYSQL_RES* m_res; /**< The result set from a query. */
-            MYSQL_ROW m_row; /**< One row of data from a query. */
-            my_bool m_reconnect; /**< Determine if the handler will attempt to reconnect when disconnected. */
-    };
-
     public:
+        virtual const vector< vector<string> > Query( const string& query ) = 0;
         const uint_t gStatus();
 
         DBConn( const uint_t& type, const string& host, const string& socket, const string& user, const string& pass, const string& database );
-        ~DBConn();
+        virtual ~DBConn();
 
     private:
-        const void Connect();
-        static const void tConnect( DBConn* dbconn );
-        const void Run();
+        virtual const void Run() = 0;
+
         uint_t m_type; /**< The type of connector to utilize from #DBCONN_TYPE. */
         string m_host; /**< Hostname of the database server. */
         string m_socket; /**< Unix socket or port number of the database server. */
         string m_user; /**< Username to login to the database server with. */
         string m_pass; /**< Password to login to the database server with. */
         string m_database; /**< Database to access on the database server. */
-        DBConn::MySQL* m_mysql; /**< MySQL connector. */
         uint_t m_status; /**< Callback to check if the thread made a successful connection. */
 };
 

@@ -75,7 +75,8 @@ int main( const int argc, char* argv[] )
         ::exit( EXIT_FAILURE );
     }
 
-    new DBConn( DBCONN_TYPE_MYSQL, "localhost", "/var/run/mysqld/mysqld.sock", "nzedb", "nzedb", "nzedb" );
+//    if ( dbconn_list.size() < CFG_MEM_MAX_DBCONN )
+//        new DBConn( DBCONN_TYPE_MYSQL, "localhost", "/var/run/mysqld/mysqld.sock", "nzedb", "nzedb", "nzedb" );
 
     while ( !g_global->m_shutdown )
     {

@@ -31,6 +31,7 @@
 #define DEC_CLASS_H
 
 class DBConn;
+    class DBConnMySQL;
 class HashDecrypter;
 
 #endif
