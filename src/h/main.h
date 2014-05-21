@@ -42,38 +42,17 @@ namespace Main
     class Global
     {
         public:
-            /** @name Core */ /**@{*/
             const void Delete();
-            /**@}*/
 
-            /** @name Query */ /**@{*/
-            /**@}*/
-
-            /** @name Manipulate */ /**@{*/
-            /**@}*/
-
-            /** @name Internal */ /**@{*/
             Global();
             ~Global();
-            /**@}*/
 
             vector<DBConn*>::iterator m_next_dbconn; /**< Used as the next iterator in all loops dealing with DBConn objects to prevent nested processing loop problems. */
             chrono::high_resolution_clock::time_point m_time_current; /**< Current time from the host OS. */
     };
 
-    /** @name Core */ /**@{*/
     const void Update();
-    /**@}*/
-
-    /** @name Query */ /**@{*/
-    /**@}*/
-
-    /** @name Manipulate */ /**@{*/
-    /**@}*/
-
-    /** @name Internal */ /**@{*/
     const void PollDBConn();
-    /**@}*/
 };
 
 #endif

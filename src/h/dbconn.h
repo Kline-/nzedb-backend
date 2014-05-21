@@ -42,20 +42,10 @@ class DBConn
     class MySQL
     {
         public:
-            /** @name Core */ /**@{*/
             const bool Connect( DBConn* dbconn );
-            /**@}*/
 
-            /** @name Query */ /**@{*/
-            /**@}*/
-
-            /** @name Manipulate */ /**@{*/
-            /**@}*/
-
-            /** @name Internal */ /**@{*/
             MySQL();
             ~MySQL();
-            /**@}*/
 
         private:
             DBConn* m_dbconn; /**< Parent DBConn for callback. */
@@ -66,20 +56,10 @@ class DBConn
     };
 
     public:
-        /** @name Core */ /**@{*/
-        /**@}*/
-
-        /** @name Query */ /**@{*/
         const uint_t gStatus();
-        /**@}*/
 
-        /** @name Manipulate */ /**@{*/
-        /**@}*/
-
-        /** @name Internal */ /**@{*/
         DBConn( const uint_t& type, const string& host, const string& socket, const string& user, const string& pass, const string& database );
         ~DBConn();
-        /**@}*/
 
     private:
         const void Connect();

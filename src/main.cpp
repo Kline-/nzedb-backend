@@ -122,7 +122,6 @@ delete g_global;
     return 0;
 }
 
-/* Core */
 /**
  * @brief The core update loop of nzedb-backend. This loop spawns all other subsystem update routines and then sleeps for #CFG_THR_SLEEP each cycle.
  * @retval void
@@ -140,11 +139,6 @@ const void Main::Update()
     return;
 }
 
-/* Query */
-
-/* Manipulate */
-
-/* Internal */
 /**
  * @brief Constructor for the Main::Global class.
  */

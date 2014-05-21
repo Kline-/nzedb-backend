@@ -32,7 +32,6 @@
 
 #include "h/list.h"
 
-/* Core */
 /**
  * @brief Connect to a MySQL database host.
  * @param[in] DBConn* A pointer to the parent DBConn object for callbacks.
@@ -98,12 +97,12 @@ const bool DBConn::MySQL::Connect( DBConn* dbconn )
 
     // Assume the thread will be successful; push the obj to list and validate it
     // during routine update loops to avoid blocking here
-    dbconn_list.push_back( this->m_dbconn );
+    m_dbconn->m_status = DBCONN_STATUS_READY;
+    dbconn_list.push_back( m_dbconn );
 
     return true;
 }
 
-/* Query */
 /**
  * @brief Returns the current status of the database connector from #DBCONN_STATUS.
  * @retval uint_t A uint_t associated to #DBCONN_STATUS.
@@ -113,9 +112,6 @@ const uint_t DBConn::gStatus()
     return m_status;
 }
 
-/* Manipulate */
-
-/* Internal */
 /**
  * @brief Sanity checks the parameters then threads off the actual connection.
  * @retval void

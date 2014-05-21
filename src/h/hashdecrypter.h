@@ -37,17 +37,6 @@ using namespace std;
 class HashDecrypter
 {
     public:
-        /** @name Core */ /**@{*/
-        /**@}*/
-
-        /** @name Query */ /**@{*/
-        /**@}*/
-
-        /** @name Manipulate */ /**@{*/
-        /**@}*/
-
-        /** @name Internal */ /**@{*/
-        /**@}*/
 
     private:
 };

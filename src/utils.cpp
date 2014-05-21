@@ -32,7 +32,6 @@
 #include "h/includes.h"
 #include "h/utils.h"
 
-/* Core */
 /**
  * @brief Returns the number of a specific character in a given string.
  * @param[in] input A string value to search.
@@ -104,11 +103,6 @@ const vector<string> Utils::StrTokens( const string& input, const bool& quiet )
     return output;
 }
 
-/* Query */
-
-/* Manipulate */
-
-/* Internal */
 /**
  * @brief This is a nested wrapper for Utils::__FormatString and should not be called directly.
  * @param[in] narg A #uint_t variable of the total number of arguments passed. Handled automatically.
