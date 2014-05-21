@@ -48,6 +48,7 @@ namespace Main
             ~Global();
 
             vector<DBConn*>::iterator m_next_dbconn; /**< Used as the next iterator in all loops dealing with DBConn objects to prevent nested processing loop problems. */
+            vector<thread> m_threads; /**< All active threads. */
             chrono::high_resolution_clock::time_point m_time_current; /**< Current time from the host OS. */
     };
 

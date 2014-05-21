@@ -56,7 +56,6 @@ const bool DBConn::MySQL::Connect( DBConn* dbconn )
     {
         m_dbconn->m_status = DBCONN_STATUS_ERROR;
         LOGFMT( flags, "DBConn::MySQL::Thread()->mysql_init()-> %s", mysql_error( &m_sql ) );
-        mysql_thread_end();
 
         return false;
     }
@@ -65,7 +64,6 @@ const bool DBConn::MySQL::Connect( DBConn* dbconn )
     {
         m_dbconn->m_status = DBCONN_STATUS_ERROR;
         LOGFMT( flags, "DBConn::MySQL::Thread()->mysql_options()-> %s", mysql_error( &m_sql ) );
-        mysql_thread_end();
 
         return false;
     }
@@ -88,9 +86,7 @@ const bool DBConn::MySQL::Connect( DBConn* dbconn )
     if ( !valid )
     {
         m_dbconn->m_status = DBCONN_STATUS_ERROR;
-        LOGFMT( flags, "DBConn::MySQL::Thread()->mysql_real_connect()-> %s", mysql_error( &m_sql ));
-        mysql_close( &m_sql );
-        mysql_thread_end();
+        LOGFMT( flags, "DBConn::MySQL::Connect()->mysql_real_connect()-> %s", mysql_error( &m_sql ) );
 
         return false;
     }
@@ -161,7 +157,7 @@ const void DBConn::Connect()
         break;
     }
 
-    thread( tConnect, this );
+    g_global->m_threads.push_back( thread( tConnect, this ) );
 
     return;
 }
@@ -180,6 +176,7 @@ const void DBConn::tConnect( DBConn* dbconn )
             if ( !dbconn->m_mysql->Connect( dbconn ) )
             {
                 LOGSTR( flags, "DBConn::tConnect()->DBConn::MySQL::Connect()-> returned false" );
+                delete dbconn;
                 return;
             }
         break;
@@ -187,6 +184,12 @@ const void DBConn::tConnect( DBConn* dbconn )
         default:
             LOGFMT( flags, "DBConn::tConnect()-> called with invalid type: %lu", dbconn->m_type );
         break;
+    }
+
+    while ( dbconn->m_status != DBCONN_STATUS_BUSY  )
+    {
+        this_thread::yield();
+        sleep( 1 );
     }
 
     return;
@@ -222,6 +225,8 @@ DBConn::DBConn( const uint_t& type, const string& host, const string& socket, co
 {
     m_mysql = NULL;
     m_status = uintmin_t;
+
+    Connect();
 
     return;
 }
